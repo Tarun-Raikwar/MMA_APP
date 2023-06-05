@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Button, TextInput, Pressable } from "react-native";
+import { View, Text, StyleSheet, Button, TextInput, Pressable, Image } from "react-native";
 
 const Home = ({ navigation }) => {
 
@@ -34,8 +34,16 @@ const Home = ({ navigation }) => {
 
     return(
         <View style={styles.Container}>
+            <View style={styles.header}>
+                <Text style={styles.companyName}>Master Management Assocites</Text>
+                <Image 
+                    style={styles.image}
+                    source={require("../assets/icon.png")}
+                />
+            </View>
+
             <View style={styles.formContainer}>
-                <Text style={styles.heading}>Login As Field Agent</Text>
+                <Text style={styles.heading}>Login</Text>
                 {isCredentialCorrect && <Text style={styles.invalid}>Invalid credentials</Text>}
                 {checking && (<Text style={{color: "blue", padding: 5}}>Please wait...</Text>)}
                 <TextInput style={styles.input} 
@@ -58,28 +66,43 @@ const Home = ({ navigation }) => {
                 <View style={styles.button}>
                     <Button title="Field Agent" onPress={submit}/>
                 </View>
+                <Pressable style={styles.press} onPress={() => navigation.navigate("Login")}>
+                    <Text style={styles.link}>If you are Admin click here</Text>
+                </Pressable>
             </View>
             
             {/* <Pressable style={styles.press} onPress={() => navigation.navigate("Create Account")}>
                 <Text style={styles.link}>Click here for newly join</Text>
             </Pressable> */}
-            <Pressable style={styles.press} onPress={() => navigation.navigate("Login")}>
-                <Text style={styles.link}>If you are Admin click here</Text>
-            </Pressable>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     Container: {
-        justifyContent: "center",
+        flex: 1,
+        flexDirection: "column",
+        justifyContent: "space-between",
         alignItems: "center",
-        flex: 1
-        // borderWidth: 1
+        paddingTop: 90,
+        paddingBottom: 100,
+    },
+    header: {
+        alignItems: "center"
+    },
+    companyName: {
+        fontSize: 18,
+        marginBottom: 30,
+    },
+    image: {
+        width: 100,
+        height: 100,
+        marginBottom: 50,
+        borderRadius: 100
     },
     heading: {
         fontSize: 20,
-        marginBottom: 20
+        marginBottom: 30
     },  
     invalid: {
         color: "red",
@@ -87,21 +110,26 @@ const styles = StyleSheet.create({
     },
     button: {
         width: "100%",
-        marginBottom: 10
+        marginBottom: 10,
+        // marginTop: 20
     },
     formContainer: {
         // borderWidth: 1,
-        width: "60%"
+        width: "60%",
+        alignItems: "center"
     },
     input: {
         borderWidth: 1,
         borderColor: "grey",
         padding: 0,
+        padding: 5,
         paddingLeft: 10,
         marginBottom: 15,
-        width: "100%"
+        width: "100%",
+        borderRadius: 5
     },
     press: {
+        marginTop: 10,
         marginBottom: 5
     },
     link: {

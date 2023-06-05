@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView, DeviceEventEmitter } from "react-native";
 import { Camera } from 'expo-camera';
 import { StatusBar } from "expo-status-bar";
 import { RadioButton } from 'react-native-paper';
 import { SelectList } from 'react-native-dropdown-select-list'
+import EventEmitter from "react-native-eventemitter";
 
-const VerifierForm = ({ route }) => {
+const VerifierForm = ({ route, navigation }) => {
 
     // stated decelaration
 
@@ -15,12 +16,12 @@ const VerifierForm = ({ route }) => {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(false);
     const [startCamera, setStartCamer] = useState(false);
-    const [isAddSame, setIsAddSame] = useState(false);
-    const [residence, setResidence] = useState("owened");
-    const [tpc, setTpc] = useState("one");
-    const [married, setMarried] = useState('un-married');
-    const [previousVisit, setPreviousVisit] = useState(false);
-    const [namePlateSeen, setNamePlateSeen] = useState(false);
+    const [isAddSame, setIsAddSame] = useState();
+    const [residence, setResidence] = useState();
+    const [tpc, setTpc] = useState();
+    const [married, setMarried] = useState();
+    const [previousVisit, setPreviousVisit] = useState();
+    const [namePlateSeen, setNamePlateSeen] = useState();
 
     const residenceType = ["owened", "relative", "rented"]
 
@@ -32,16 +33,16 @@ const VerifierForm = ({ route }) => {
         name: "",
         dob: "",
         address: "",
-        age: null,
+        age: "",
         fi_type: "",
         case_no: "",
 
-        IsAddressSame: "",
+        IsAddressSame: "No",
         PersonMetName: "",
         RelationWithApplicant: "",
         ProvideAddressIfChanged: "",
 
-        Family_income: null,
+        Family_income: "",
         Previous_occupation: "",
         Occupation: "",
         residence: "",
@@ -50,15 +51,15 @@ const VerifierForm = ({ route }) => {
         Name_of_landlord_if_rented: "",
         Tenure_of_stay: "",
 
-        Name_plate_seen: "",
+        Name_plate_seen: "No",
         Name_mentioned_on_plate: "",
         Floor_number: "",
         Color_of_building: "",
 
-        FamilyCount: null,
+        FamilyCount: "",
         MartialStatus: "",
         TypeOfFamily: "",
-        dependentCount: null,
+        dependentCount: "",
 
         Id_proof: "",
         Type_of_house: "",
@@ -68,7 +69,7 @@ const VerifierForm = ({ route }) => {
 
         Asset_seen: "",
 
-        tpc: "",
+        tpc: "one",
         nieghbour_additional_detail: "",
 
         Type_of_veichel: "",
@@ -76,11 +77,15 @@ const VerifierForm = ({ route }) => {
         Manufacturer_name: "",
         Model: "",
 
-        Previous_visit: "",
-        Status: "",
+        Previous_visit: "No",
 
+        Status_of_verifier: "",
+        Verifier_notes: "",
+
+        Status: "",
         image: null
     });
+
 
     useEffect(() => {
         setFData(route.params.data);
@@ -108,7 +113,7 @@ const VerifierForm = ({ route }) => {
         }
 
         let newPhoto = await cameraRef.current.takePictureAsync(options);
-        setImages([...images, newPhoto.base64])
+        setImages([...images, newPhoto.base64]);
     }
 
 
@@ -117,6 +122,7 @@ const VerifierForm = ({ route }) => {
     // submit form
 
     const submit = () => {
+
         // console.log(fData)
         fData.image = images;
 
@@ -149,7 +155,9 @@ const VerifierForm = ({ route }) => {
                         .then(data => {
                             setSubmitting(false);
                             setSubmitted(true);
-                            console.log(data)
+                            console.log(data);
+                            DeviceEventEmitter.emit("submit", route.params.index);
+                            navigation.goBack();
                         })
                         .catch(err => {
                             setSubmitting(false);
@@ -184,7 +192,7 @@ const VerifierForm = ({ route }) => {
                 {error && <Text style={styles.error}>Server error</Text>}
             </View>
             <ScrollView>
-                <Text style={styles.heading}>Fill client detail here</Text>
+                {/* <Text style={styles.heading}>Fill client detail here</Text> */}
 
                 <View style={styles.form}>
 
@@ -282,7 +290,7 @@ const VerifierForm = ({ route }) => {
                         />
                     </View>
 
-                    
+
                     {residence !== "owened" && <TextInput style={styles.textInput}
                         placeholder="owner of residence"
                         onChangeText={(text) => setFData({ ...fData, Residence_owned_by: text })}
@@ -417,8 +425,8 @@ const VerifierForm = ({ route }) => {
 
                     <TextInput style={styles.textInput}
                         placeholder="Id proof"
-                        onChangeText={(text) => setFData({ ...fData, Id_proof_type: text })}
-                        value={fData.Id_proof_type}
+                        onChangeText={(text) => setFData({ ...fData, Id_proof: text })}
+                        value={fData.Id_proof}
                     />
 
 
@@ -644,7 +652,7 @@ const VerifierForm = ({ route }) => {
 const styles = StyleSheet.create({
     formContainer: {
         flex: 1,
-        padding: 8,
+        padding: 8
     },
     update: {
         justifyContent: "center",
@@ -701,7 +709,8 @@ const styles = StyleSheet.create({
         borderColor: "grey",
         padding: 5,
         fontSize: 15,
-        marginBottom: 20
+        marginBottom: 20,
+        borderRadius: 5
     },
     UploadimageContainer: {
         // borderWidth: 1,

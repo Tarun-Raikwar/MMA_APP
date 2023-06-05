@@ -1,5 +1,7 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
+import { View, Text, StyleSheet, FlatList, Pressable, DeviceEventEmitter } from "react-native";
+import EventEmitter from "react-native-eventemitter";
 
 const Verifier = ({ route, navigation }) => {
     const [pending, setPending] = useState(null);
@@ -21,6 +23,7 @@ const Verifier = ({ route, navigation }) => {
             .then(data => {
                 if(data.status == true){
                     setPending(data.fetchedData);
+                    console.log(data.fetchedData.length);
                     setLoading(false);
                 }
             })
@@ -29,16 +32,31 @@ const Verifier = ({ route, navigation }) => {
         else{
             setLoading(false);
         }
+
     }, []);
 
-    const press = (item) => {
-        console.log("Press");
-        navigation.navigate("VerifierForm", {AgentId: AgentData.AgentData._id, data: item, pending: AgentData.AgentData.Pending, Done: AgentData.AgentData.Done});
+    useEffect(() => {
+
+        DeviceEventEmitter.addListener("submit", (value) => {
+            setPending([...pending.slice(0, value), ...pending.slice(value+1, pending.length)]);
+        })
+
+        return () => {
+            DeviceEventEmitter.removeAllListeners();
+        }
+    }, [pending])
+
+    const deletePending = (ind) => {
+        
     }
 
-    const renderItem = ({ item }) => {
+    const press = ({item, index}) => {
+        navigation.navigate("form", {AgentId: AgentData.AgentData._id, data: item, pending: AgentData.AgentData.Pending, Done: AgentData.AgentData.Done, index: index});
+    }
+
+    const renderItem = ({ item, index }) => {
         return (
-            <Pressable onPress={() => press(item)}>
+            <Pressable onPress={() => press({item, index})}>
                 <View style={styles.ItemContainer}>
                     <View style={styles.text_data}>
                         <Text>Name: {item.name}</Text>
@@ -54,13 +72,16 @@ const Verifier = ({ route, navigation }) => {
     };
 
     return(
-        <View style={(loading || pending == null)? [styles.Container, {justifyContent: "center", alignItems: "center"}]: styles.Container}>
+        <View style={(loading || (pending == null || pending.length == 0))? [styles.Container, {justifyContent: "center", alignItems: "center"}]: styles.Container}>
             {loading && <Text>Loading...</Text>}
-            {(!loading && pending == null) && <Text>No pending work</Text>}
+            {(!loading && (pending == null || pending.length == 0)) && <Text>No pending work</Text>}
             {pending && (
                 <FlatList 
                     data = {pending}
-                    renderItem={renderItem}
+                    renderItem={({item, index}) => { 
+                        return renderItem({item, index})
+                    }}
+                    style={styles.list}
                 />
             )}
         </View>
@@ -70,12 +91,19 @@ const Verifier = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     Container: {
         flex: 1,
-        padding: 10
+        paddingTop: 20
     },
     ItemContainer: {
-        backgroundColor: "lightgrey",
+        backgroundColor: "white",
+        elevation: 3,  
         padding: 10,
-        borderRadius: 5
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    list: {
+        width: "100%",
+        paddingLeft: 20,
+        paddingRight: 20
     }
 })
 

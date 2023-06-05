@@ -23,7 +23,7 @@ export default function App() {
     // </View>
     <NavigationContainer>
       <Stack.Navigator initialRouteName='Home'>
-        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Home" component={Home} options={{ headerShown: false }}/>
         <Stack.Screen name="Verifier" component={Verifier} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Borrower" component={Borrower} />
@@ -31,7 +31,7 @@ export default function App() {
         <Stack.Screen name="Admin" component={Admin} />
         <Stack.Screen name="Agent" component={Agent} />
         <Stack.Screen name="AssignWork" component={AssignWork} />
-        <Stack.Screen name="VerifierForm" component={VerifierForm} />
+        <Stack.Screen name="form" component={VerifierForm} />
       </Stack.Navigator>
     </NavigationContainer>
   );

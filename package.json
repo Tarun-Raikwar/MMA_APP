@@ -24,6 +24,7 @@
     "react-native-datefield": "^0.3.6",
     "react-native-document-picker": "^8.2.0",
     "react-native-dropdown-select-list": "^2.0.4",
+    "react-native-eventemitter": "^0.0.1",
     "react-native-fieldset": "^1.0.3",
     "react-native-image-picker": "^4.10.3",
     "react-native-paper": "^5.8.0",

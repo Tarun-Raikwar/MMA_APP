@@ -3,19 +3,19 @@ import { View, Text, StyleSheet, TextInput, Button, Image, ScrollView, DeviceEve
 import { Camera } from 'expo-camera';
 import { StatusBar } from "expo-status-bar";
 import { RadioButton } from 'react-native-paper';
-import { SelectList } from 'react-native-dropdown-select-list'
-import EventEmitter from "react-native-eventemitter";
+import { SelectList } from 'react-native-dropdown-select-list';
+import * as Location from 'expo-location';
 
 const VerifierForm = ({ route, navigation }) => {
 
     // stated decelaration
 
     const [images, setImages] = useState([]);
-    const [originalData, setOriginalData] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(false);
     const [startCamera, setStartCamer] = useState(false);
+
     const [isAddSame, setIsAddSame] = useState();
     const [residence, setResidence] = useState();
     const [tpc, setTpc] = useState();
@@ -83,16 +83,34 @@ const VerifierForm = ({ route, navigation }) => {
         Verifier_notes: "",
 
         Status: "",
+        location: "",
+        date: "",
+        remarks: "",
         image: null
     });
 
 
+    const [currLocation, setLocation] = useState(null);
+    const [errorMsg, setErrorMsg] = useState(null);
+
+
     useEffect(() => {
         setFData(route.params.data);
-        setOriginalData(route.params.data);
         (async () => {
             const cameraPermission = Camera.requestCameraPermissionsAsync();
             setCameraPermission(cameraPermission === 'granted');
+        })();
+
+        (async () => {
+
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                setErrorMsg('Permission to access location was denied');
+                return;
+            }
+
+            let fetched_location = await Location.getCurrentPositionAsync({});
+            setLocation(fetched_location.coords.latitude + " " + fetched_location.coords.longitude);
         })();
     }, []);
 
@@ -100,9 +118,23 @@ const VerifierForm = ({ route, navigation }) => {
     if (cameraPermission === undefined) {
         return <Text>Requsting permissions...</Text>
     }
-    else if (!cameraPermission) {
+    if (!cameraPermission) {
         return <Text>Please provide access to your camera</Text>
     }
+
+
+
+    if (errorMsg) {
+        console.log(errorMsg);
+        return <Text>Required GPS perminssion</Text>
+    }
+
+
+    if (errorMsg) {
+        return <Text>Camera perminssion required</Text>
+    }
+
+
 
 
     let takePic = async () => {
@@ -117,22 +149,23 @@ const VerifierForm = ({ route, navigation }) => {
     }
 
 
+    const getCurrentDate = () => {
+        return new Date();
+    }
 
 
     // submit form
 
+    const remarks = ` ${currLocation} //low stability // Visit done at given address Easy  // Met with applicant ${fData.RelationWithApplicant} , ${fData.PersonMetName}  // As per met person applicant is staying in Self  house since 1 week  with Nuclear Family  // This is Part of Independent House on floor 2 // ${fData.Type_of_house} // Area approx ${fData.Area_approx} // Total family members are ${fData.FamilyCount} and dependents ${fData.dependentCount} // Furnishing is Door Step Verification // Neighbour check met male guard not confirm by name  and met Not available // Locality is ${fData.Locality_type} // Color of Building ${fData.Color_of_building}  and Color of Gate Browt // Occupation is ${fData.Occupation} // Date and time of visit ${getCurrentDate()} // Done By powen panday`;
+
     const submit = () => {
-
-        // console.log(fData)
-        fData.image = images;
-
         setSubmitting(true);
         fetch("https://mma-server.onrender.com/updateData", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id: route.params.data._id, update: fData })
+            body: JSON.stringify({agent: route.params.Credentials, data: { id: route.params.data._id, update: {...fData, location: currLocation, remarks: remarks, date: getCurrentDate(), image: images} }})
         })
             .then(res => res.json())
             .then(data => {
@@ -149,13 +182,12 @@ const VerifierForm = ({ route, navigation }) => {
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ id: route.params.AgentId, update: { Pending: pending, Done: Done } })
+                        body: JSON.stringify({agent: route.params.Credentials, data: {id: route.params.AgentId, update: { Pending: pending, Done: Done }} })
                     })
                         .then(res => res.json())
                         .then(data => {
                             setSubmitting(false);
                             setSubmitted(true);
-                            console.log(data);
                             DeviceEventEmitter.emit("submit", route.params.index);
                             navigation.goBack();
                         })
@@ -176,11 +208,6 @@ const VerifierForm = ({ route, navigation }) => {
                 setError(true);
                 console.log(err);
             })
-
-
-        setFData(originalData);
-
-        setImages([]);
     }
 
 
@@ -201,12 +228,22 @@ const VerifierForm = ({ route, navigation }) => {
 
                     <Text style={styles.formType}>Basic Detail :-</Text>
 
-                    <Text>name:              {fData.name}</Text>
-                    <Text>DOB:                {fData.dob}</Text>
-                    <Text>Address:         {fData.address}</Text>
-                    <Text>Age:                 {fData.age}</Text>
-                    <Text>FI_TYPE:         {fData.fi_type}</Text>
-                    <Text>Case number:       {fData.case_no}</Text>
+                    <View style={styles.key_val}>
+                        <Text style={styles.key}>Name</Text>
+                        <Text style={styles.value}>{fData.name}</Text>
+                    </View>
+                    <View style={styles.key_val}>
+                        <Text style={styles.key}>FI Type</Text>
+                        <Text style={styles.value}>{fData.fi_type}</Text>
+                    </View>
+                    <View style={styles.key_val}>
+                        <Text style={styles.key}>Case no</Text>
+                        <Text style={styles.value}>{fData.case_no}</Text>
+                    </View>
+                    <View style={styles.key_val}>
+                        <Text style={styles.key}>Address</Text>
+                        <Text style={styles.value}>{fData.address}</Text>
+                    </View>
 
                     {/* *********** Applican't information obtained by person met ********** */}
 
@@ -761,6 +798,21 @@ const styles = StyleSheet.create({
     },
     selectList: {
         marginBottom: 20
+    },
+    key_val: {
+        flexDirection: "row",
+        width: "100%",
+        overflow: "hidden"
+    },
+    key: {
+        width: 80,
+        // borderWidth: 1
+        fontWeight: "500",
+        marginBottom: 5
+    },
+    value: {
+        // borderWidth: 1,
+        flex: 1
     }
 });
 

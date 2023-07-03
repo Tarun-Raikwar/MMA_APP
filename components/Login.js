@@ -12,15 +12,16 @@ const Login = ({ navigation }) => {
 
         setChecking(true);
 
-        fetch("https://mma-server.onrender.com/loginAdmin", {
+        fetch("http://172.16.2.105:3000/loginAdmin", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({username: userName, password: password})
+            body: JSON.stringify({agent: {username: userName, password: password}, data: {username: userName, password: password}})
         })
         .then(res => res.json())
         .then(data => {
+            console.log(data);
             if(data.status){
                 navigation.navigate("Admin");
             }

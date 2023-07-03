@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Button, TextInput, Pressable, Image } from "react-native";
 
 const Home = ({ navigation }) => {
-
     const [userName, setUserName] = useState("");
-    const [pass, setPass] = useState(""); 
+    const [pass, setPass] = useState("");
     const [isCredentialCorrect, setIsCredentialCorrect] = useState(false);
     const [checking, setChecking] = useState(false);
 
+
+
     const submit = () => {
-        
+
         setChecking(true);
 
         fetch("https://mma-server.onrender.com/loginFieldAgent", {
@@ -17,26 +18,27 @@ const Home = ({ navigation }) => {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({Username: userName, Pass: pass})
+            body: JSON.stringify({agent: { Username: userName, Pass: pass }, data: { Username: userName, Pass: pass }})
         })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status == false){
-                setIsCredentialCorrect(true);
-            }
-            else{
-                navigation.navigate("Verifier", data);
-            }
-            setChecking(false);
-        })
-        .catch(err => console.log(err))
+            .then(res => res.json())
+            .then(data => {
+                if (data.status == false) {
+                    setIsCredentialCorrect(true);
+                }
+                else {
+                    console.log("success");
+                    navigation.navigate("Verifier", {Credentials: { Username: userName, Pass: pass }, data: data});
+                }
+                setChecking(false);
+            })
+            .catch(err => console.log(err))
     }
 
-    return(
+    return (
         <View style={styles.Container}>
             <View style={styles.header}>
                 <Text style={styles.companyName}>Master Management Assocites</Text>
-                <Image 
+                <Image
                     style={styles.image}
                     source={require("../assets/icon.png")}
                 />
@@ -45,17 +47,17 @@ const Home = ({ navigation }) => {
             <View style={styles.formContainer}>
                 <Text style={styles.heading}>Login</Text>
                 {isCredentialCorrect && <Text style={styles.invalid}>Invalid credentials</Text>}
-                {checking && (<Text style={{color: "blue", padding: 5}}>Please wait...</Text>)}
-                <TextInput style={styles.input} 
+                {checking && (<Text style={{ color: "blue", padding: 5 }}>Please wait...</Text>)}
+                <TextInput style={styles.input}
                     placeholder="Username"
                     onChangeText={(text) => {
                         setUserName(text);
                         setIsCredentialCorrect(false);
                     }}
-                    value={userName}    
+                    value={userName}
                 />
-                <TextInput 
-                    style={styles.input} 
+                <TextInput
+                    style={styles.input}
                     placeholder="Password"
                     onChangeText={(text) => {
                         setPass(text);
@@ -64,13 +66,13 @@ const Home = ({ navigation }) => {
                     value={pass}
                 />
                 <View style={styles.button}>
-                    <Button title="Field Agent" onPress={submit}/>
+                    <Button title="Field Agent" onPress={submit} />
                 </View>
-                <Pressable style={styles.press} onPress={() => navigation.navigate("Login")}>
+                {/* <Pressable style={styles.press} onPress={() => navigation.navigate("Login")}>
                     <Text style={styles.link}>If you are Admin click here</Text>
-                </Pressable>
+                </Pressable> */}
             </View>
-            
+
             {/* <Pressable style={styles.press} onPress={() => navigation.navigate("Create Account")}>
                 <Text style={styles.link}>Click here for newly join</Text>
             </Pressable> */}
@@ -103,7 +105,7 @@ const styles = StyleSheet.create({
     heading: {
         fontSize: 20,
         marginBottom: 30
-    },  
+    },
     invalid: {
         color: "red",
         marginBottom: 10
